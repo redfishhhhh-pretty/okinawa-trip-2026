@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2026 沖繩元旦 10 人行</title>
+    <style>
+        :root {
+            --primary: #2B4C7E; /* 日本藍 */
+            --accent: #C53D43; /* 茜色 (強調/美食) */
+            --nature: #557C55; /* 抹茶綠 (景點) */
+            --bg: #F7F7F7;
+            --card-bg: #FFFFFF;
+            --text: #333333;
+            --sub-text: #666666;
+            --border: #E0E0E0;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+        /* Header */
+        .header { background: var(--card-bg); padding: 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .header h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--primary); }
+        .header p { margin: 5px 0 0; font-size: 12px; color: var(--sub-text); }
+        
+        /* Weather Widget Placeholder */
+        .weather-widget { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, #e0f7fa 0%, #ffffff 100%); padding: 10px 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #b2ebf2; }
+        .weather-icon { font-size: 24px; }
+        .weather-info { font-size: 12px; font-weight: 600; color: #006064; }
+
+        /* Day Tabs */
+        .tabs { display: flex; overflow-x: auto; padding: 10px 15px; gap: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab { flex: 0 0 auto; padding: 8px 16px; background: #fff; border-radius: 20px; font-size: 13px; color: var(--sub-text); border: 1px solid var(--border); transition: all 0.3s; }
+        .tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; box-shadow: 0 2px 5px rgba(43, 76, 126, 0.3); }
+
+        /* Content Area */
+        .content-area { padding: 10px 15px; display: none; }
+        .content-area.active { display: block; animation: fadeIn 0.3s ease; }
+
+        /* Cards */
+        .card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); border-left: 4px solid transparent; position: relative; }
+        .card.spot { border-left-color: var(--nature); }
+        .card.food { border-left-color: var(--accent); }
+        .card.transport { border-left-color: var(--primary); }
+        
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .card-time { font-size: 12px; font-weight: 700; color: var(--primary); background: #E8F0FE; padding: 2px 6px; border-radius: 4px; }
+        .card-title { margin: 8px 0 4px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+        .card-desc { font-size: 13px; color: var(--sub-text); line-height: 1.5; margin-bottom: 10px; }
+
+        /* Tags & Highlights */
+        .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+        .tag { font-size: 11px; padding: 3px 8px; border-radius: 4px; font-weight: 600; }
+        .tag-must-eat { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+        .tag-story { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+        .tag-res { background: #FFF3E0; color: #EF6C00; border: 1px solid #FFE0B2; }
+        .tag-shop { background: #F3E5F5; color: #7B1FA2; border: 1px solid #E1BEE7; }
+
+        /* Navigation Button */
+        .nav-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; background: var(--bg); color: var(--primary); border: 1px solid var(--border); padding: 8px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; margin-top: 5px; transition: 0.2s; }
+        .nav-btn:active { background: #e0e0e0; }
+        .nav-btn::before { content: '📍'; margin-right: 5px; }
+
+        /* Info Section (Flight/Hotel) */
+        .info-group { margin-bottom: 20px; }
+        .info-label { font-size: 12px; color: var(--sub-text); margin-bottom: 5px; display: block; }
+        .info-value { font-size: 15px; font-weight: 500; background: #fff; padding: 12px; border-radius: 8px; border: 1px solid var(--border); }
+        .copy-btn { float: right; font-size: 12px; color: var(--primary); cursor: pointer; }
+
+        /* Budget Section */
+        .budget-row { display: flex; justify-content: space-between; margin-bottom: 10px; background: #fff; padding: 12px; border-radius: 8px; align-items: center; }
+        .budget-input { border: none; text-align: right; font-size: 16px; width: 100px; color: var(--text); outline: none; }
+        .total-budget { font-size: 20px; font-weight: 700; color: var(--primary); text-align: center; margin: 20px 0; }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); z-index: 1000; }
+        .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: var(--sub-text); text-decoration: none; flex: 1; }
+        .nav-item.active { color: var(--primary); font-weight: 700; }
+        .nav-icon { font-size: 20px; margin-bottom: 3px; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .hidden { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <h1>2026 沖繩元旦 10 人行 🌺</h1>
+        <p>1月1日 (四) - 1月5日 (一) | 自駕兩台車</p>
+    </header>
+
+    <div id="view-itinerary" class="main-view">
+        <div class="tabs">
+            <div class="tab active" onclick="switchDay('day1')">Day 1<br>抵達</div>
+            <div class="tab" onclick="switchDay('day2')">Day 2<br>南部</div>
+            <div class="tab" onclick="switchDay('day3')">Day 3<br>北部</div>
+            <div class="tab" onclick="switchDay('day4')">Day 4<br>購物</div>
+            <div class="tab" onclick="switchDay('day5')">Day 5<br>返程</div>
+        </div>
+
+        <div id="day1" class="content-area active">
+            <div class="weather-widget">
+                <span class="weather-icon">☁️</span>
+                <span class="weather-info">那霸市 18°C - 22°C (預報)</span>
+            </div>
+
+            <div class="card transport">
+                <div class="card-header"><span class="card-time">18:00</span></div>
+                <div class="card-title">OTS 租車手續</div>
+                <div class="card-desc">搭乘接駁車前往豐崎營業所。需檢查車況、確認兩台車導航。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=OTS+Rent-a-car+Toyosaki" target="_blank" class="nav-btn">導航至租車公司</a>
+            </div>
+
+            <div class="card food">
+                <div class="card-header"><span class="card-time">20:30</span></div>
+                <div class="card-title">晚餐：ゆうなんぎ (Yuunangi)</div>
+                <div class="tags">
+                    <span class="tag tag-must-eat">必吃：紅燒肉 Rafute</span>
+                    <span class="tag tag-must-eat">必點：墨魚汁湯</span>
+                </div>
+                <div class="card-desc">沖繩家常料理名店。*若遇公休則改去 Mion 居酒屋。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Yuunangi+Okinawa" target="_blank" class="nav-btn">導航至餐廳</a>
+            </div>
+        </div>
+
+        <div id="day2" class="content-area">
+             <div class="weather-widget">
+                <span class="weather-icon">☀️</span>
+                <span class="weather-info">南城市 19°C - 23°C (預報)</span>
+            </div>
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">10:00</span></div>
+                <div class="card-title">首里城公園 (新春之宴)</div>
+                <div class="tags"><span class="tag tag-story">國王王妃出巡儀式</span></div>
+                <div class="card-desc">觀賞 10:00-11:00 的御規式。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Shurijo+Castle+Park" target="_blank" class="nav-btn">導航至首里城</a>
+            </div>
+
+            <div class="card food">
+                <div class="card-header"><span class="card-time">12:00</span></div>
+                <div class="card-title">午餐：Shimujo 古民家沖繩麵</div>
+                <div class="tags"><span class="tag tag-story">百年古民家</span><span class="tag tag-must-eat">三層肉麵</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Shimujo+Okinawa+Soba" target="_blank" class="nav-btn">導航至餐廳</a>
+            </div>
+
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">15:50</span></div>
+                <div class="card-title">玉泉洞 & 王國村</div>
+                <div class="card-desc">東洋第一鐘乳石洞。前一站可先去 Cave Cafe 喝咖啡。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Okinawa+World" target="_blank" class="nav-btn">導航至玉泉洞</a>
+            </div>
+
+            <div class="card food">
+                <div class="card-header"><span class="card-time">18:00</span></div>
+                <div class="card-title">晚餐二選一：Costco 派對 vs 傑克牛排</div>
+                <div class="tags"><span class="tag tag-shop">Costco熟食</span><span class="tag tag-must-eat">美式菲力牛排</span></div>
+                <div class="card-desc">
+                    A案：Costco南城店買壽司回飯店 (極順路)<br>
+                    B案：回那霸排隊吃傑克牛排 (需折返)
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Costco+Wholesale+Okinawa+Nanjo" target="_blank" class="nav-btn">導航至 Costco 南城</a>
+            </div>
+        </div>
+
+        <div id="day3" class="content-area">
+             <div class="weather-widget">
+                <span class="weather-icon">🌊</span>
+                <span class="weather-info">名護市 18°C - 21°C (預報)</span>
+            </div>
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">10:00</span></div>
+                <div class="card-title">萬座毛</div>
+                <div class="tags"><span class="tag tag-story">攻略：直奔3F免費觀景台</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Manzamo" target="_blank" class="nav-btn">導航至萬座毛</a>
+            </div>
+
+             <div class="card food">
+                <div class="card-header"><span class="card-time">13:30</span></div>
+                <div class="card-title">午餐：今歸仁麵 (Nakijin Soba)</div>
+                <div class="tags"><span class="tag tag-must-eat">鹽味三層肉麵</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Nakijin+Soba" target="_blank" class="nav-btn">導航至餐廳</a>
+            </div>
+
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">15:00</span></div>
+                <div class="card-title">今歸仁城跡</div>
+                <div class="tags"><span class="tag tag-story">世界遺產</span></div>
+                <div class="card-desc">特色：野面堆積工法，城牆如波浪般蜿蜒。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Nakijin+Castle+Ruins" target="_blank" class="nav-btn">導航至今歸仁城</a>
+            </div>
+             <div class="card spot">
+                <div class="card-header"><span class="card-time">16:30</span></div>
+                <div class="card-title">美麗海水族館</div>
+                <div class="tags"><span class="tag tag-story">黑潮之海鯨鯊</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Okinawa+Churaumi+Aquarium" target="_blank" class="nav-btn">導航至水族館</a>
+            </div>
+        </div>
+
+        <div id="day4" class="content-area">
+            <div class="weather-widget">
+                <span class="weather-icon">🛍️</span>
+                <span class="weather-info">沖繩全島 19°C (預報)</span>
+            </div>
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">09:15</span></div>
+                <div class="card-title">奧武山公園 (沖宮 & 護國神社)</div>
+                <div class="tags"><span class="tag tag-story">能量景點</span><span class="tag tag-story">新年大鳥居</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Okinogu+Shrine" target="_blank" class="nav-btn">導航至奧武山</a>
+            </div>
+            <div class="card food">
+                <div class="card-header"><span class="card-time">11:30</span></div>
+                <div class="card-title">午餐：牧志公設市場</div>
+                <div class="tags"><span class="tag tag-must-eat">代客料理龍蝦</span><span class="tag tag-must-eat">夜光貝</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Makishi+Public+Market" target="_blank" class="nav-btn">導航至市場</a>
+            </div>
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">14:00</span></div>
+                <div class="card-title">AEON MALL Rycom</div>
+                <div class="card-desc">⚠️ 務必於 16:50 前離開，以免趕不上晚餐。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=AEON+MALL+Okinawa+Rycom" target="_blank" class="nav-btn">導航至商場</a>
+            </div>
+            <div class="card food">
+                <div class="card-header"><span class="card-time">18:00</span></div>
+                <div class="card-title">晚餐：焼肉 琉球の牛 (那霸久茂地)</div>
+                <div class="tags">
+                    <span class="tag tag-res">已預約 18:00</span>
+                    <span class="tag tag-must-eat">頂級和牛</span>
+                </div>
+                <div class="card-desc">請準時抵達。旅程最高潮的慶功宴。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Ryukyu+no+Ushi+Naha+Kokusai+Dori" target="_blank" class="nav-btn">導航至餐廳</a>
+            </div>
+        </div>
+
+        <div id="day5" class="content-area">
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">10:30</span></div>
+                <div class="card-title">瀨長島 Umikaji Terrace</div>
+                <div class="tags"><span class="tag tag-story">沖繩小希臘</span></div>
+                <div class="card-desc">純白建築與海景，近距離欣賞飛機。推薦：幸福鬆餅。</div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Senagajima+Umikaji+Terrace" target="_blank" class="nav-btn">導航至瀨長島</a>
+            </div>
+            <div class="card spot">
+                <div class="card-header"><span class="card-time">13:00</span></div>
+                <div class="card-title">ASHIBINAA Outlet</div>
+                <div class="tags"><span class="tag tag-shop">精品/運動品牌</span></div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Ashibinaa+Outlet" target="_blank" class="nav-btn">導航至 Outlet</a>
+            </div>
+            <div class="card transport">
+                <div class="card-header"><span class="card-time">15:30</span></div>
+                <div class="card-title">還車 & 機場</div>
+                <div class="card-desc">前往豐崎區還車，搭接駁車至機場。VZ569 (18:05起飛)。</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-info" class="main-view hidden">
+        <div class="card">
+            <h3>🏨 住宿資訊</h3>
+            <div class="info-group">
+                <span class="info-label">飯店名稱</span>
+                <div class="info-value">Okinawa Harborview Hotel <span class="copy-btn" onclick="copyText('Okinawa Harborview Hotel')">複製</span></div>
+            </div>
+            <a href="https://www.google.com/maps/search/?api=1&query=Okinawa+Harborview+Hotel" target="_blank" class="nav-btn">導航至飯店</a>
+        </div>
+
+        <div class="card">
+            <h3>✈️ 航班資訊 (泰越捷)</h3>
+            <div class="info-group">
+                <span class="info-label">去程 (1/1)</span>
+                <div class="info-value">VZ568 | 14:45 TPE -> 17:05 OKA</div>
+            </div>
+            <div class="info-group">
+                <span class="info-label">回程 (1/5)</span>
+                <div class="info-value">VZ569 | 18:05 OKA -> 18:45 TPE</div>
+            </div>
+            <div class="tags"><span class="tag tag-res">回程僅一人加購 20kg</span></div>
+        </div>
+    </div>
+
+    <div id="view-budget" class="main-view hidden">
+        <div class="card">
+            <h3>💰 公費記帳 (日圓)</h3>
+            <div class="budget-row">
+                <span>租車/油資 (2台)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+            <div class="budget-row">
+                <span>Day 1 晚餐 (Yuunangi)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+            <div class="budget-row">
+                <span>Day 2 晚餐 (Costco/牛排)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+            <div class="budget-row">
+                <span>Day 3 晚餐 (美國村)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+            <div class="budget-row">
+                <span>Day 4 晚餐 (琉球の牛)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+             <div class="budget-row">
+                <span>其他公費 (門票/水)</span>
+                <input type="number" class="budget-input" onchange="calcBudget()" placeholder="0">
+            </div>
+            <hr>
+            <div class="total-budget">總計: ¥ <span id="total-sum">0</span></div>
+            <p style="text-align:center; font-size:12px; color:#666;">每人應付 (除以10): ¥ <span id="per-person">0</span></p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" onclick="switchView('view-itinerary', this)">
+            <span class="nav-icon">📅</span>
+            行程
+        </a>
+        <a href="#" class="nav-item" onclick="switchView('view-info', this)">
+            <span class="nav-icon">ℹ️</span>
+            資訊
+        </a>
+        <a href="#" class="nav-item" onclick="switchView('view-budget', this)">
+            <span class="nav-icon">¥</span>
+            記帳
+        </a>
+    </nav>
+
+    <script>
+        function switchDay(dayId) {
+            // Hide all day contents
+            document.querySelectorAll('.content-area').forEach(el => el.classList.remove('active'));
+            // Show selected
+            document.getElementById(dayId).classList.add('active');
+            // Update tabs style
+            document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function switchView(viewId, navEl) {
+            event.preventDefault();
+            // Hide all main views
+            document.querySelectorAll('.main-view').forEach(el => el.classList.add('hidden'));
+            // Show selected view
+            document.getElementById(viewId).classList.remove('hidden');
+            
+            // Update bottom nav style
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            navEl.classList.add('active');
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已複製：' + text);
+            });
+        }
+
+        function calcBudget() {
+            let total = 0;
+            document.querySelectorAll('.budget-input').forEach(input => {
+                total += Number(input.value);
+            });
+            document.getElementById('total-sum').innerText = total.toLocaleString();
+            document.getElementById('per-person').innerText = (total / 10).toLocaleString();
+        }
+    </script>
+</body>
+</html>
